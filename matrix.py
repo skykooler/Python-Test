@@ -9,6 +9,14 @@ if sys.version_info[0]==3:
 
 verbose = False
 
+# General idea is we loop through all cells, checking the ones to the left and above the current cell:
+#    1    1    1
+#      ┌  ^  ┐
+#       \ | /
+#    1 <- 1
+# If any of these are 1's, they have been checked already, so put the current cell in the same region as them
+# If the current cell is in two regions now, merge them.
+
 def solve(m=None,n=None,mat=None):
 	matrix = []
 	cells_to_regions = {}
