@@ -9,6 +9,7 @@ if sys.version_info[0]==3:
 
 verbose = False
 
+# Version 1:
 # General idea is we loop through all cells, checking the ones to the left and above the current cell:
 #    1    1    1
 #      ┌  ^  ┐
@@ -16,6 +17,12 @@ verbose = False
 #    1 <- 1
 # If any of these are 1's, they have been checked already, so put the current cell in the same region as them
 # If the current cell is in two regions now, merge them.
+#
+#
+# Version 2:
+# For every 1 we encounter, build a tree of all connected 1's, and mark them all as seen in the cache.
+# Only check spaces that aren't in the cache. This means that no '1' space will be visited more than
+# once, and no expensive lookups
 
 def solve(m=None,n=None,mat=None):
 	matrix = []
@@ -47,6 +54,9 @@ def solve(m=None,n=None,mat=None):
 
 	if verbose:
 		print ("Processing row:")
+	return process_v2(matrix, m, n)
+
+def process_v1(matrix, m, n, cells_to_regions, regions_to_cells):
 	for rowindex, row in enumerate(matrix):
 		if verbose:
 			print (rowindex)
@@ -118,6 +128,40 @@ def solve(m=None,n=None,mat=None):
 		print ("Final result:")
 
 	return max([len(regions_to_cells[i]) for i in regions_to_cells])
+
+def trace_tree(matrix, m, n, rowindex, cellindex, cache):
+	num = 1
+	stack = [(rowindex,cellindex)]
+	while stack:
+		cell = stack.pop()
+		for i in range(cell[0]-1,cell[0]+2):
+			for j in range(cell[1]-1,cell[1]+2):
+				if i>=0 and j>=0 and i<m and j<n and matrix[i][j] and not cache[i][j]:
+					num+=1
+					# We can modify cache because lists are passed by reference
+					cache[i][j] = True
+					stack.append((i,j))
+	return num
+
+def process_v2(matrix, m, n):
+	lens = []
+	cache = []
+	for i in range(m):
+		cache.append([False]*n)
+	for rowindex, row in enumerate(matrix):
+		if verbose:
+			print (rowindex)
+
+		for cellindex, cell in enumerate(row):
+			if not cell or cache[rowindex][cellindex]:
+				continue
+
+
+			cache[rowindex][cellindex] = True
+			lens.append(trace_tree(matrix, m, n, rowindex, cellindex, cache))
+
+	return max(lens)
+
 
 
 if __name__=="__main__":
